@@ -1,0 +1,8 @@
+student
+nome:string
+cognome:string
+data_di_nascita:date
+course
+nome:string
+cfu:int
+course*student

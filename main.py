@@ -1,4 +1,4 @@
-import sys, re
+import sys, re, os
 from utils import syntax_error, snake2pascal
 from type import Type
 from relation import Relation
@@ -67,4 +67,12 @@ def from_file(filename):
         return relations
 
 relations=from_file(FILENAME)
-open("ciao", "w").write(relations[0].getDTO())
+
+os.mkdir("out")
+for relation in relations:
+    with open("out\\"+relation.java_name()+"DTO.java", "w") as f:
+        f.write(relations[0].getDTO())
+    with open("out\\"+relation.java_name()+"DAO.java", "w") as f:
+        f.write(relations[0].getDAO())
+    with open("out\\Db2"+relation.java_name()+"DAO.java", "w") as f:
+        f.write(relations[0].getDb2DAO())

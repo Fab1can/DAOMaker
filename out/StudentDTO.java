@@ -11,7 +11,12 @@ public class StudentDTO implements Serializable {
 	public StudentDTO() {
 		this.courses = new ArrayList<Course>();
 	}
-	public String getNome(){
+	public int getId(){
+        return this.id;
+	}
+    public void setId(int id){
+		this.id=id;
+	}	public String getNome(){
 		return this.nome;
 	}
 	public void setNome(String nome){

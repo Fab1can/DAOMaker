@@ -1,3 +1,5 @@
+from attribute import Attribute
+from utils import snake2pascal
 
 class Relation:
     def __init__(self, name: str, attributes: list[Attribute]):
@@ -8,7 +10,7 @@ class Relation:
         nla = []
         for attribute in self.attributes:
             if not attribute.type.array_list:
-                nla.applen(attribute)
+                nla.append(attribute)
         return nla
 
     def java_name(self):
@@ -16,15 +18,15 @@ class Relation:
     
     def getDAO(self):
         return """
-public interface """+self.java_name()+"""DAO {
+public interface {java_name}DAO {{
 
 	// --- CRUD -------------
 
-	public void create("""+self.java_name()+"""DTO """+self.name+""");
+	public void create({java_name}DTO {name});
 
-	public """+self.java_name()+"""DTO read(int id);
+	public {java_name}DTO read(int id);
 
-	public boolean update("""+self.java_name()+"""DTO """+self.name+""");
+	public boolean update({java_name}DTO {name});
 
 	public boolean delete(int id);
 
@@ -35,12 +37,12 @@ public interface """+self.java_name()+"""DAO {
 
 	public boolean dropTable();
 
-}
-"""
+}}
+""".format(java_name=self.java_name(), name=self.name)
 
-    def getDB2DAO(self):
+    def getDb2DAO(self):
 
-        return """public class Db2{java_name}DAO implements {java_name}DAO {
+        return """public class Db2{java_name}DAO implements {java_name}DAO {{
 
 	// === Costanti letterali per non sbagliarsi a scrivere !!! ============================
 
@@ -88,13 +90,13 @@ public interface """+self.java_name()+"""DAO {
 	// === METODI DAO =========================================================================
 
 	@Override
-	public void create({java_name}DTO {sql_name}) {
+	public void create({java_name}DTO {sql_name}) {{
 		Connection conn = Db2DAOFactory.createConnection();
-		if (course == null) {
+		if (course == null) {{
 			System.err.println("create(): failed to insert a null entry");
 			return;
-		}
-		try {
+		}}
+		try {{
 			PreparedStatement prep_stmt = conn.prepareStatement(insert);
 			prep_stmt.clearParameters();
 			prep_stmt.setInt(1, course.getId());
@@ -105,55 +107,55 @@ public interface """+self.java_name()+"""DAO {
 			//GESTIRE ASSOCIAZIONI
 				
 			
-		} catch (Exception e) {
+		}} catch (Exception e) {{
 			System.err.println("create(): failed to insert entry: " + e.getMessage());
 			e.printStackTrace();
-		} finally {
+		}} finally {{
 			Db2DAOFactory.closeConnection(conn);
-		}
-	}
+		}}
+	}}
 
 	@Override
-	public {java_name}DTO read(int id) {
+	public {java_name}DTO read(int id) {{
 		{java_name}DTO result = null;
-		if (id < 0) {
+		if (id < 0) {{
 			System.err.println("read(): cannot read an entry with a negative id");
 			return result;
-		}
+		}}
 		Connection conn = Db2DAOFactory.createConnection();
-		try {
+		try {{
 			PreparedStatement prep_stmt = conn.prepareStatement(read_by_id);
 			prep_stmt.clearParameters();
 			prep_stmt.setInt(1, id);
 			ResultSet rs = prep_stmt.executeQuery();
-			if (rs.next()) {
+			if (rs.next()) {{
 				{java_name}DTO entry = new {java_name}DTO();
 				entry.setId(rs.getInt(ID));
 {read_statement}
 				
 				//GESTIRE ASSOCIAZIONI
 				result = entry;
-			}
+			}}
 			rs.close();
 			prep_stmt.close();
-		} catch (Exception e) {
+		}} catch (Exception e) {{
 			System.err.println("read(): failed to retrieve entry with id = " + id + ": " + e.getMessage());
 			e.printStackTrace();
-		} finally {
+		}} finally {{
 			Db2DAOFactory.closeConnection(conn);
-		}
+		}}
 		return result;
-	}
+	}}
 
 	@Override
-	public boolean update({java_name}DTO {sql_name}) {
+	public boolean update({java_name}DTO {sql_name}) {{
 		boolean result = false;
-		if (course == null) {
+		if (course == null) {{
 			System.err.println("update(): failed to update a null entry");
 			return result;
-		}
+		}}
 		Connection conn = Db2DAOFactory.createConnection();
-		try {
+		try {{
 			PreparedStatement prep_stmt = conn.prepareStatement(update);
 			prep_stmt.clearParameters();
 			prep_stmt.setInt(1, course.getId());
@@ -161,74 +163,76 @@ public interface """+self.java_name()+"""DAO {
 			prep_stmt.executeUpdate();
 			result = true;
 			prep_stmt.close();
-		} catch (Exception e) {
+		}} catch (Exception e) {{
 			System.err.println("insert(): failed to update entry: " + e.getMessage());
 			e.printStackTrace();
-		} finally {
+		}} finally {{
 			Db2DAOFactory.closeConnection(conn);
-		}
+		}}
 		return result;
-	}
+	}}
+
+
 
 	@Override
-	public boolean delete(int id) {
+	public boolean delete(int id) {{
 		boolean result = false;
-		if (id < 0) {
+		if (id < 0) {{
 			System.err.println("delete(): cannot delete an entry with an invalid id ");
 			return result;
-		}
+		}}
 		Connection conn = Db2DAOFactory.createConnection();
-		try {
+		try {{
 			PreparedStatement prep_stmt = conn.prepareStatement(Db2CourseDAO.delete);
 			prep_stmt.clearParameters();
 			prep_stmt.setInt(1, id);
 			prep_stmt.executeUpdate();
 			result = true;
 			prep_stmt.close();
-		} catch (Exception e) {
+		}} catch (Exception e) {{
 			System.err.println("delete(): failed to delete entry with id = " + id + ": " + e.getMessage());
 			e.printStackTrace();
-		} finally {
+		}} finally {{
 			Db2DAOFactory.closeConnection(conn);
-		}
+		}}
 		return result;
-	}
+	}}
 
 	@Override
-	public boolean createTable() {
+	public boolean createTable() {{
 		boolean result = false;
 		Connection conn = Db2DAOFactory.createConnection();
-		try {
+		try {{
 			Statement stmt = conn.createStatement();
 			stmt.execute(create);
 			result = true;
 			stmt.close();
-		} catch (Exception e) {
+		}} catch (Exception e) {{
 			System.err.println("createTable(): failed to create table '" + TABLE + "': " + e.getMessage());
-		} finally {
+		}} finally {{
 			Db2DAOFactory.closeConnection(conn);
-		}
+		}}
 		return result;
-	}
+	}}
 
 	@Override
-	public boolean dropTable() {
+	public boolean dropTable() {{
 		boolean result = false;
 		Connection conn = Db2DAOFactory.createConnection();
-		try {
+		try {{
 			Statement stmt = conn.createStatement();
 			stmt.execute(drop);
 			result = true;
 			stmt.close();
-		} catch (Exception e) {
+		}} catch (Exception e) {{
 			System.err.println("dropTable(): failed to drop table '" + TABLE + "': " + e.getMessage());
-		} finally {
+		}} finally {{
 			Db2DAOFactory.closeConnection(conn);
-		}
+		}}
 		return result;
-	}
+	}}
 
-}""".format(
+}}""".format(
     java_name=self.java_name(),
     sql_name=self.name, 
     static_names = "\n".join(["\tstatic final "+attribute.type.static_name()+" "+attribute.name.upper()+" = \""+attribute.static_name()+"\";" for attribute in self.attributes]),
@@ -236,7 +240,7 @@ public interface """+self.java_name()+"""DAO {
     insert_interrogatives = ","+",".join(["?" for attribute in self.non_list_attributes()]) if len(self.non_list_attributes())>0 else "",
     update_names = "\n".join(["\t\t\t"+attribute.name.upper()+" + \" = ?, \" +" for attribute in self.non_list_attributes()]),
     create_names = ",\n"+", \" +\n".join(["\t\t\t"+attribute.name.upper()+" + \" "+attribute.type.sql_name for attribute in self.non_list_attributes()]),
-    insert_statemement = "\n".join(["\t\t\tprep_stmt.get"+ self.non_list_attributes()[i].type.prepared_name+"("+str(i+1)+", "+self.non_list_attributes()[i].get_getter_method(self.name) for i in range(len(self.non_list_attributes()))]),
+    insert_statement = "\n".join(["\t\t\tprep_stmt.get"+ self.non_list_attributes()[i].type.prepared_name+"("+str(i+1)+", "+self.non_list_attributes()[i].get_getter_method(self.name) for i in range(len(self.non_list_attributes()))]),
     read_statement = "\n".join(["\t\t\t"+attribute.get_setter_method()+";" for attribute in self.non_list_attributes()])
 )
         

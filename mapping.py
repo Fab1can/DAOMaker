@@ -1,3 +1,5 @@
+from utils import snake2pascal
+
 class Mapping:
     def __init__(self, relation1, relation2):
         self.relation1 = relation1

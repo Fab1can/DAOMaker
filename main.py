@@ -4,8 +4,12 @@ from type import Type
 from relation import Relation
 from attribute import Attribute
 from mapping import Mapping
+from factories import DAOfactory, DB2DAOfactory
 
-FILENAME="esempio"#sys.argv[0]
+FILENAME=sys.argv[1]
+CARATETRI_INIZIALI="[a-zàèìòùé]"
+ALTRI_CARATTERI="[a-z_0-9àèìòùé]"
+PAROLA=CARATETRI_INIZIALI+ALTRI_CARATTERI+"*"
 
 def from_file(filename):
     f = open(filename,"r")
@@ -16,9 +20,9 @@ def from_file(filename):
     mappings = {}
     clean_mappings = {}
     for line in lines:
-        res_relation = re.search("^[a-z][a-z_0-9]*$", line)
-        res_attribute = re.search("^([a-z][a-z_0-9]*):([a-z][a-z_0-9]*)$",line)
-        res_mappings = re.search("^([a-z][a-z_0-9]*)\*([a-z][a-z_0-9]*)$",line)
+        res_relation = re.search("^"+PAROLA+"$", line)
+        res_attribute = re.search("^("+PAROLA+"):("+PAROLA+")$",line)
+        res_mappings = re.search("^("+PAROLA+")\*("+PAROLA+")$",line)
         res_empty = re.search("^$",line)
         if res_relation:
             _relations[line]={}
@@ -92,3 +96,7 @@ for relation in relations:
         f.write(relation.getDAO())
     with open("out\\Db2"+relation.java_name()+"DAO.java", "w") as f:
         f.write(relation.getDb2DAO())
+with open("out\\DAOFactory.java", "w") as f:
+    f.write(DAOfactory(relations))
+with open("out\\Db2DAOFactory.java", "w") as f:
+    f.write(DB2DAOfactory(relations))

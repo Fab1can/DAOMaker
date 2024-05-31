@@ -41,7 +41,9 @@ class Attribute:
     def get_getter(self):
         string = "\tpublic "
         if self.type.array_list:
-            string+="List<"+self.type.java_name+"> "
+            string+="List<"+self.type.java_name+"DTO> "
+        elif self.type.foreign:
+            string+=self.type.java_name+"DTO "
         else:
             string+=self.type.java_name+" "
         if self.type.java_name=="boolean":
@@ -60,7 +62,9 @@ class Attribute:
             string+="set"+self.java_signature()
         string += "("
         if self.type.array_list:
-            string+="List<"+self.type.java_name+"> "
+            string+="List<"+self.type.java_name+"DTO> "
+        elif self.type.foreign:
+            string+=self.type.java_name+"DTO "
         else:
             string+=self.type.java_name+" "
         string += self.name

@@ -2,11 +2,14 @@ farmer
 name:string
 surname:string
 birth_date:date
+
 cow
 name:string
 race:string
-farmer:farmer
+owner:farmer
+
 field
 size:float
-farmer:farmer
+owner:farmer
+
 cow*field

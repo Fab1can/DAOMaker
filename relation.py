@@ -263,7 +263,9 @@ public interface {java_name}DAO {{
         string+="\tprivate int id;\n"
         for attribute in self.attributes:
             if attribute.type.array_list:
-                string+="\tprivate List<"+attribute.type.java_name+"> "+attribute.java_name()+";\n"
+                string+="\tprivate List<"+attribute.type.java_name+"DTO> "+attribute.java_name()+";\n"
+            elif attribute.type.foreign:
+                string+="\tprivate "+attribute.type.java_name+"DTO "+attribute.java_name()+";\n"
             else:
                 string+="\tprivate "+attribute.type.java_name+" "+attribute.java_name()+";\n"
         string += "\n"

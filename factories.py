@@ -45,10 +45,10 @@ public abstract class DAOFactory {
 """
     for item in relations:
         string += "\tpublic abstract "+item.java_name()+"DAO get"+item.java_name()+"DAO();\n\n"
-    string *= "}"
+    string += "}"
     return string
 
-def DB2DAOfactory(relations, username, password):
+def DB2DAOfactory(relations):
     string = """
 public class Db2DAOFactory extends DAOFactory {
 

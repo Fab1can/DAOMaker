@@ -1,8 +1,9 @@
-import sys, re, os
+import sys, re, os, shutil
 from utils import syntax_error, snake2pascal
 from type import Type
 from relation import Relation
 from attribute import Attribute
+from mapping import Mapping
 
 FILENAME="esempio"#sys.argv[0]
 
@@ -13,10 +14,12 @@ def from_file(filename):
     _relations = {}
     _relation = ""
     mappings = {}
+    clean_mappings = {}
     for line in lines:
         res_relation = re.search("^[a-z][a-z_0-9]*$", line)
         res_attribute = re.search("^([a-z][a-z_0-9]*):([a-z][a-z_0-9]*)$",line)
         res_mappings = re.search("^([a-z][a-z_0-9]*)\*([a-z][a-z_0-9]*)$",line)
+        res_empty = re.search("^$",line)
         if res_relation:
             _relations[line]={}
             _relation=line
@@ -25,12 +28,16 @@ def from_file(filename):
         elif res_mappings:
             if res_mappings.group(1) in mappings:
                 mappings[res_mappings.group(1)].append(res_mappings.group(2))
+                clean_mappings[res_mappings.group(1)].append(res_mappings.group(2))
             else:
                 mappings[res_mappings.group(1)]=[res_mappings.group(2)]
+                clean_mappings[res_mappings.group(1)]=[res_mappings.group(2)]
             if res_mappings.group(2) in mappings:
                 mappings[res_mappings.group(2)].append(res_mappings.group(1))
             else:
                 mappings[res_mappings.group(2)]=[res_mappings.group(1)]
+        elif res_empty:
+            continue
         else:
             syntax_error()
 
@@ -61,18 +68,27 @@ def from_file(filename):
         if relation in mappings:
             for mapped in mappings[relation]:
                 attributes.append(Attribute(mapped+"s", Type(snake2pascal(mapped), None, True, True)))
-        else:
-            syntax_error()
+
         relations.append(Relation(relation, attributes))
-        return relations
+
+    for relation in clean_mappings:
+        for mapping in clean_mappings[relation]:
+            relations.append(Mapping(relation, mapping))
+
+    return relations
 
 relations=from_file(FILENAME)
 
+try:
+    shutil.rmtree("out")
+except FileNotFoundError:
+    pass
 os.mkdir("out")
 for relation in relations:
-    with open("out\\"+relation.java_name()+"DTO.java", "w") as f:
-        f.write(relations[0].getDTO())
+    if type(relation) is Relation:
+        with open("out\\"+relation.java_name()+"DTO.java", "w") as f:
+            f.write(relation.getDTO())
     with open("out\\"+relation.java_name()+"DAO.java", "w") as f:
-        f.write(relations[0].getDAO())
+        f.write(relation.getDAO())
     with open("out\\Db2"+relation.java_name()+"DAO.java", "w") as f:
-        f.write(relations[0].getDb2DAO())
+        f.write(relation.getDb2DAO())

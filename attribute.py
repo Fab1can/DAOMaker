@@ -33,6 +33,8 @@ class Attribute:
             return "entry.set"+self.java_signature()+"(new java.sql.Date(rs.getDate("+self.name.upper()+").getTime()))"
         elif self.type.java_name=="boolean":
             return "entry.is"+self.java_signature()+"(rs.getBoolean("+self.name.upper()+"))"
+        elif self.type.foreign:
+            return "//INSERISCI IL GETTER PER "+self.name.upper()
         else:
             return "entry.set"+self.java_signature()+"(rs.get"+self.type.prepared_name+"("+self.name.upper()+"))"
 

@@ -22,11 +22,11 @@ public interface {java_name}DAO {{
 
 	// --- CRUD -------------
 
-	public void create({java_name}DTO {name});
+	public void create({java_name}DTO {sql_name});
 
 	public {java_name}DTO read(int id);
 
-	public boolean update({java_name}DTO {name});
+	public boolean update({java_name}DTO {sql_name});
 
 	public boolean delete(int id);
 
@@ -38,7 +38,7 @@ public interface {java_name}DAO {{
 	public boolean dropTable();
 
 }}
-""".format(java_name=self.java_name(), name=self.name)
+""".format(java_name=self.java_name(), sql_name=self.name)
 
     def getDb2DAO(self):
 
@@ -92,14 +92,14 @@ public interface {java_name}DAO {{
 	@Override
 	public void create({java_name}DTO {sql_name}) {{
 		Connection conn = Db2DAOFactory.createConnection();
-		if (course == null) {{
+		if ({sql_name} == null) {{
 			System.err.println("create(): failed to insert a null entry");
 			return;
 		}}
 		try {{
 			PreparedStatement prep_stmt = conn.prepareStatement(insert);
 			prep_stmt.clearParameters();
-			prep_stmt.setInt(1, course.getId());
+			prep_stmt.setInt(1, {sql_name}.getId());
 {insert_statement}
 			prep_stmt.executeUpdate();
 			prep_stmt.close();
@@ -150,7 +150,7 @@ public interface {java_name}DAO {{
 	@Override
 	public boolean update({java_name}DTO {sql_name}) {{
 		boolean result = false;
-		if (course == null) {{
+		if ({sql_name} == null) {{
 			System.err.println("update(): failed to update a null entry");
 			return result;
 		}}
@@ -158,7 +158,7 @@ public interface {java_name}DAO {{
 		try {{
 			PreparedStatement prep_stmt = conn.prepareStatement(update);
 			prep_stmt.clearParameters();
-			prep_stmt.setInt(1, course.getId());
+			prep_stmt.setInt(1, {sql_name}.getId());
 {insert_statement}
 			prep_stmt.executeUpdate();
 			result = true;
@@ -183,7 +183,7 @@ public interface {java_name}DAO {{
 		}}
 		Connection conn = Db2DAOFactory.createConnection();
 		try {{
-			PreparedStatement prep_stmt = conn.prepareStatement(Db2CourseDAO.delete);
+			PreparedStatement prep_stmt = conn.prepareStatement(Db2{java_name}DAO.delete);
 			prep_stmt.clearParameters();
 			prep_stmt.setInt(1, id);
 			prep_stmt.executeUpdate();
@@ -235,13 +235,13 @@ public interface {java_name}DAO {{
 }}""".format(
     java_name=self.java_name(),
     sql_name=self.name, 
-    static_names = "\n".join(["\tstatic final "+attribute.type.static_name()+" "+attribute.name.upper()+" = \""+attribute.static_name()+"\";" for attribute in self.attributes]),
+    static_names = "\n".join(["\tstatic final String "+attribute.name.upper()+" = \""+attribute.static_name()+"\";" for attribute in self.non_list_attributes()]),
     insert_names = "+\",\"+"+"+\",\"+".join([attribute.name.upper() for attribute in self.non_list_attributes()]) if len(self.non_list_attributes())>0 else "",
     insert_interrogatives = ","+",".join(["?" for attribute in self.non_list_attributes()]) if len(self.non_list_attributes())>0 else "",
     update_names = "\n".join(["\t\t\t"+attribute.name.upper()+" + \" = ?, \" +" for attribute in self.non_list_attributes()]),
-    create_names = ",\n"+", \" +\n".join(["\t\t\t"+attribute.name.upper()+" + \" "+attribute.type.sql_name for attribute in self.non_list_attributes()]),
-    insert_statement = "\n".join(["\t\t\tprep_stmt.get"+ self.non_list_attributes()[i].type.prepared_name+"("+str(i+1)+", "+self.non_list_attributes()[i].get_getter_method(self.name) for i in range(len(self.non_list_attributes()))]),
-    read_statement = "\n".join(["\t\t\t"+attribute.get_setter_method()+";" for attribute in self.non_list_attributes()])
+    create_names = "\t\t\t\",\"+\n"+"+\n".join(["\t\t\t\""+attribute.name.upper()+" "+attribute.type.sql_name+"\"" for attribute in self.non_list_attributes()])+"+",
+    insert_statement = "\n".join(["\t\t\tprep_stmt.set"+ self.non_list_attributes()[i].type.prepared_name+"("+str(i+1)+", "+self.non_list_attributes()[i].get_getter_method(self.name)+");" for i in range(len(self.non_list_attributes()))]),
+    read_statement = "\n".join(["\t\t\t\t"+attribute.get_setter_method()+";" for attribute in self.non_list_attributes()])
 )
         
 

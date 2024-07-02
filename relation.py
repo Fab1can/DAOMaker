@@ -50,7 +50,7 @@ public interface {java_name}DAO {{
 
 	// -------------------------------------------------------------------------------------
 
-	static final String ID = "id";
+	public static final String ID = "id";
 {static_names}
 
 	// == STATEMENT SQL ====================================================================
@@ -104,7 +104,7 @@ public interface {java_name}DAO {{
 			prep_stmt.executeUpdate();
 			prep_stmt.close();
 			
-			//GESTIRE ASSOCIAZIONI
+			//TODO: GESTIRE ASSOCIAZIONI
 				
 			
 		}} catch (Exception e) {{
@@ -133,7 +133,7 @@ public interface {java_name}DAO {{
 				entry.setId(rs.getInt(ID));
 {read_statement}
 				
-				//GESTIRE ASSOCIAZIONI
+				//TODO: GESTIRE ASSOCIAZIONI
 				result = entry;
 			}}
 			rs.close();
@@ -209,6 +209,7 @@ public interface {java_name}DAO {{
 			stmt.close();
 		}} catch (Exception e) {{
 			System.err.println("createTable(): failed to create table '" + TABLE + "': " + e.getMessage());
+			e.printStackTrace();
 		}} finally {{
 			Db2DAOFactory.closeConnection(conn);
 		}}
@@ -226,6 +227,7 @@ public interface {java_name}DAO {{
 			stmt.close();
 		}} catch (Exception e) {{
 			System.err.println("dropTable(): failed to drop table '" + TABLE + "': " + e.getMessage());
+			e.printStackTrace();
 		}} finally {{
 			Db2DAOFactory.closeConnection(conn);
 		}}
@@ -235,12 +237,12 @@ public interface {java_name}DAO {{
 }}""".format(
     java_name=self.java_name(),
     sql_name=self.name, 
-    static_names = "\n".join(["\tstatic final String "+attribute.name.upper()+" = \""+attribute.static_name()+"\";" for attribute in self.non_list_attributes()]),
+    static_names = "\n".join(["\tpublic static final String "+attribute.name.upper()+" = \""+attribute.static_name()+"\";" for attribute in self.non_list_attributes()]),
     insert_names = "+\",\"+"+"+\",\"+".join([attribute.name.upper() for attribute in self.non_list_attributes()]) if len(self.non_list_attributes())>0 else "",
     insert_interrogatives = ","+",".join(["?" for attribute in self.non_list_attributes()]) if len(self.non_list_attributes())>0 else "",
     update_names = "\n".join(["\t\t\t"+attribute.name.upper()+" + \" = ?, \" +" for attribute in self.non_list_attributes()]),
     create_names = "\t\t\t\",\"+\n"+"+\n".join(["\t\t\t\""+attribute.name.upper()+" "+attribute.type.sql_name+"\"" for attribute in self.non_list_attributes()])+"+",
-    insert_statement = "\n".join(["\t\t\tprep_stmt.set"+ self.non_list_attributes()[i].type.prepared_name+"("+str(i+1)+", "+self.non_list_attributes()[i].get_getter_method(self.name)+");" for i in range(len(self.non_list_attributes()))]),
+    insert_statement = "\n".join(["\t\t\tprep_stmt.set"+ self.non_list_attributes()[i].type.prepared_name+"("+str(i+2)+", "+self.non_list_attributes()[i].get_getter_method(self.name)+");" for i in range(len(self.non_list_attributes()))]),
     read_statement = "\n".join(["\t\t\t\t"+attribute.get_setter_method()+";" for attribute in self.non_list_attributes()])
 )
         
@@ -251,7 +253,7 @@ public interface {java_name}DAO {{
         string += "DTO() {\n"
         for attribute in self.attributes:
             if attribute.type.array_list:
-                string += "\t\tthis."+attribute.java_name()+" = new ArrayList<"+attribute.type.java_name+">();\n"
+                string += "\t\tthis."+attribute.java_name()+" = new ArrayList<"+attribute.type.java_name+"DTO>();\n"
         string += "\t}"
         return string
         

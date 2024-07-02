@@ -34,43 +34,40 @@ public class Db2{java_name}DAO implements {java_name}DAO {{
 
 	// === Costanti letterali per non sbagliarsi a scrivere !!! ============================
 
-	static final String TABLE = "{relation1}_{relation2}";
+	public static final String TABLE = "{relation1}_{relation2}";
+    
+    public static final String TABLE_1 = "{relation1}";
+    public static final String TABLE_2 = "{relation2}";
 
 	// -------------------------------------------------------------------------------------
 
-	static final String ID_1 = "{id1}";
-	static final String ID_2 = "{id2}";
+	public static final String ID_1 = "{id1}";
+	public static final String ID_2 = "{id2}";
 
 	// == STATEMENT SQL ====================================================================
 
-	// INSERT INTO table ( {id1}, {id2} ) VALUES ( ?,? );
 	static final String insert = "INSERT " +
 			"INTO " + TABLE + " ( " +
 			ID_1 + ", " + ID_2 + " " +
 			") " +
 			"VALUES (?,?) ";
 
-	// SELECT * FROM table WHERE idcolumns = ?;
 	static String read_by_ids = "SELECT * " +
 			"FROM " + TABLE + " " +
 			"WHERE " + ID_1 + " = ? " +
 			"AND " + ID_2 + " = ? ";
 
-	// SELECT * FROM table WHERE idcolumns = ?;
 	static String read_by_{id1} = "SELECT * " +
-			"FROM " + TABLE + " " +
-			"WHERE " + ID_1 + " = ? ";
+			"FROM " + TABLE + " t , " + TABLE_2 + " t2 " +
+			"WHERE t." + ID_2 + " = t2."+Db2{relation2_java_name}DAO.ID+" AND t." + ID_1 +" = ?";
 
-	// SELECT * FROM table WHERE idcolumns = ?;
 	static String read_by_{id2} = "SELECT * " +
-			"FROM " + TABLE + " " +
-			"WHERE " + ID_2 + " = ? ";
+			"FROM " + TABLE + " t , " + TABLE_1 + " t1 " +
+			"WHERE t." + ID_1 + " = t1."+Db2{relation1_java_name}DAO.ID+" AND t." + ID_2 +" = ?";
 
-	// SELECT * FROM table WHERE stringcolumn = ?;
 	static String read_all = "SELECT * " +
 			"FROM " + TABLE + " ";
 
-	// DELETE FROM table WHERE idcolumn = ?;
 	static String delete = "DELETE " +
 			"FROM " + TABLE + " " +
 			"WHERE " + ID_1 + " = ? " +
@@ -78,7 +75,6 @@ public class Db2{java_name}DAO implements {java_name}DAO {{
 
 	// -------------------------------------------------------------------------------------
 
-	// CREATE entrytable ( code INT NOT NULL PRIMARY KEY, ... );
 	static String create = "CREATE " +
 			"TABLE " + TABLE + " ( " +
 			ID_1 + " INT NOT NULL, " +
@@ -174,4 +170,4 @@ public class Db2{java_name}DAO implements {java_name}DAO {{
 		return result;
 	}}
 
-}}""".format(java_name=self.java_name(), relation1=self.relation1, relation2=self.relation2, id1=self.relation1+"_id", id2=self.relation2+"_id")
+}}""".format(java_name=self.java_name(), relation1=self.relation1, relation2=self.relation2, id1=self.relation1+"_id", id2=self.relation2+"_id", relation1_java_name=snake2pascal(self.relation1), relation2_java_name=snake2pascal(self.relation2))

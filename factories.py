@@ -31,10 +31,10 @@ public abstract class DAOFactory {
 		switch ( whichFactory ) {
 		case DB2:
 			return new Db2DAOFactory();
-		case HSQLDB:
-			return new HsqldbDAOFactory();
-		case MYSQL:
-			return new MySqlDAOFactory();
+		//case HSQLDB:
+		//	return new HsqldbDAOFactory();
+		//case MYSQL:
+		//	return new MySqlDAOFactory();
 		default:
 			return null;
 		}
@@ -50,6 +50,9 @@ public abstract class DAOFactory {
 
 def DB2DAOfactory(relations):
     string = """
+import java.sql.Connection;
+import java.sql.DriverManager;
+    
 public class Db2DAOFactory extends DAOFactory {
 
 	/**
@@ -74,7 +77,7 @@ public class Db2DAOFactory extends DAOFactory {
 			Class.forName(DRIVER);
 		} 
 		catch (Exception e) {
-			System.err.println(Db2DAOFactory.class.getName()+": failed to load DB2 JDBC driver" + "\n" + e.toString());
+			System.err.println(Db2DAOFactory.class.getName()+": failed to load DB2 JDBC driver\\n" + e.toString());
 			e.printStackTrace();
 		}
 	}
@@ -100,7 +103,7 @@ public class Db2DAOFactory extends DAOFactory {
 			return DriverManager.getConnection(DBURL,USERNAME,PASSWORD);
 		} 
 		catch (Exception e) {
-			System.err.println(Db2DAOFactory.class.getName() + ".createConnection(): failed creating connection" + "\n" + e.toString());
+			System.err.println(Db2DAOFactory.class.getName() + ".createConnection(): failed creating connection\\n" + e.toString());
 			e.printStackTrace();
 			System.err.println("Was the database started? Is the database URL right?");
 			return null;
@@ -115,7 +118,7 @@ public class Db2DAOFactory extends DAOFactory {
 			conn.close();
 		}
 		catch (Exception e) {
-			System.err.println(Db2DAOFactory.class.getName() + ".closeConnection(): failed closing connection" + "\n" + e.toString());
+			System.err.println(Db2DAOFactory.class.getName() + ".closeConnection(): failed closing connection\\n"  + e.toString());
 			e.printStackTrace();
 		}
 	}
@@ -126,7 +129,7 @@ public class Db2DAOFactory extends DAOFactory {
     for item in relations:
         string += "\t@Override\n"
         string += "\tpublic "+item.java_name()+"DAO get"+item.java_name()+"DAO() {\n"
-        string += "\t\treturn new Db2"+item.java_name()+"DAO;\n"
+        string += "\t\treturn new Db2"+item.java_name()+"DAO();\n"
         string += "\t}\n\n"
     string += "}"
     return string

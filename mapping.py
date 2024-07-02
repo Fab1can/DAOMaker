@@ -59,11 +59,11 @@ public class Db2{java_name}DAO implements {java_name}DAO {{
 
 	static String read_by_{id1} = "SELECT * " +
 			"FROM " + TABLE + " t , " + TABLE_2 + " t2 " +
-			"WHERE t." + ID_2 + " = t2."+Db2{relation2_java_name}DAO.ID+" AND t." + ID_1 +" = ?";
+			"WHERE t." + ID_2 + " = t2." + Db2{relation2_java_name}DAO.ID + " AND t." + ID_1 +" = ?";
 
 	static String read_by_{id2} = "SELECT * " +
 			"FROM " + TABLE + " t , " + TABLE_1 + " t1 " +
-			"WHERE t." + ID_1 + " = t1."+Db2{relation1_java_name}DAO.ID+" AND t." + ID_2 +" = ?";
+			"WHERE t." + ID_1 + " = t1." + Db2{relation1_java_name}DAO.ID + " AND t." + ID_2 +" = ?";
 
 	static String read_all = "SELECT * " +
 			"FROM " + TABLE + " ";
@@ -147,6 +147,7 @@ public class Db2{java_name}DAO implements {java_name}DAO {{
 			stmt.close();
 		}} catch (Exception e) {{
 			System.err.println("createTable(): failed to create table '" + TABLE + "': " + e.getMessage());
+			e.printStackTrace();
 		}} finally {{
 			Db2DAOFactory.closeConnection(conn);
 		}}
@@ -164,6 +165,7 @@ public class Db2{java_name}DAO implements {java_name}DAO {{
 			stmt.close();
 		}} catch (Exception e) {{
 			System.err.println("dropTable(): failed to drop table '" + TABLE + "': " + e.getMessage());
+			e.printStackTrace();
 		}} finally {{
 			Db2DAOFactory.closeConnection(conn);
 		}}

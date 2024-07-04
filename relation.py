@@ -2,9 +2,11 @@ from attribute import Attribute
 from utils import snake2pascal
 
 class Relation:
-    def __init__(self, name: str, attributes: list[Attribute]):
+    def __init__(self, name: str, plural: str, attributes: list[Attribute], nodao: bool):
         self.name = name
+        self.plural = plural
         self.attributes = attributes
+        self.nodao = nodao
     
     def non_list_attributes(self):
         nla = []
@@ -52,7 +54,7 @@ public class Db2{java_name}DAO implements {java_name}DAO {{
 
 	// === Costanti letterali per non sbagliarsi a scrivere !!! ============================
 
-	static final String TABLE = "{sql_name}";
+	static final String TABLE = "{sql_name_plural}";
 
 	// -------------------------------------------------------------------------------------
 
@@ -243,6 +245,7 @@ public class Db2{java_name}DAO implements {java_name}DAO {{
 }}""".format(
     java_name=self.java_name(),
     sql_name=self.name, 
+    sql_name_plural=self.plural,
     static_names = "\n".join(["\tpublic static final String "+attribute.name.upper()+" = \""+attribute.static_name()+"\";" for attribute in self.non_list_attributes()]),
     insert_names = "+\",\"+"+"+\",\"+".join([attribute.name.upper() for attribute in self.non_list_attributes()]) if len(self.non_list_attributes())>0 else "",
     insert_interrogatives = ","+",".join(["?" for attribute in self.non_list_attributes()]) if len(self.non_list_attributes())>0 else "",
@@ -251,15 +254,29 @@ public class Db2{java_name}DAO implements {java_name}DAO {{
     insert_statement = "\n".join(["\t\t\tprep_stmt.set"+ self.non_list_attributes()[i].type.prepared_name+"("+str(i+2)+", "+self.non_list_attributes()[i].get_getter_method(self.name)+");" for i in range(len(self.non_list_attributes()))]),
     read_statement = "\n".join(["\t\t\t\t"+attribute.get_setter_method()+";" for attribute in self.non_list_attributes()])
 )
-        
+
+
+    def getCreateDrop(self):
+        return """CREATE TABLE {sql_name_plural} ( id INT NOT NULL PRIMARY KEY{create_names} )
+            
+DROP TABLE {sql_name_plural}
+""".format(
+    sql_name_plural=self.plural,
+    create_names = ", "+", ".join([attribute.name.upper()+" "+attribute.type.sql_name for attribute in self.non_list_attributes()])
+)
 
     def DTOconstructor(self):
         string = "\tpublic "
         string += self.java_name()
-        string += "DTO() {\n"
+        if not self.nodao:
+            string+="DTO"
+        string += "() {\n"
         for attribute in self.attributes:
             if attribute.type.array_list:
-                string += "\t\tthis."+attribute.java_name()+" = new ArrayList<"+attribute.type.java_name+"DTO>();\n"
+                if self.nodao:
+                    string += "\t\tthis."+attribute.java_name()+" = new HashSet<"+attribute.type.java_name+">();\n"
+                else:
+                    string += "\t\tthis."+attribute.java_name()+" = new ArrayList<"+attribute.type.java_name+"DTO>();\n"
         string += "\t}"
         return string
         
@@ -267,13 +284,21 @@ public class Db2{java_name}DAO implements {java_name}DAO {{
     def getDTO(self):
         string = "public class "
         string += self.java_name()
-        string += "DTO implements Serializable {\n\n\tprivate static final long serialVersionUID = 1L;\n\n"
+        if not self.nodao:
+            string+="DTO"
+        string += " implements java.io.Serializable {\n\n\tprivate static final long serialVersionUID = 1L;\n\n"
         string+="\tprivate int id;\n"
         for attribute in self.attributes:
             if attribute.type.array_list:
-                string+="\tprivate List<"+attribute.type.java_name+"DTO> "+attribute.java_name()+";\n"
+                if self.nodao:
+                    string+="\tprivate Set<"+attribute.type.java_name+"> "+attribute.java_name()+";\n"
+                else:
+                    string+="\tprivate List<"+attribute.type.java_name+"DTO> "+attribute.java_name()+";\n"
             elif attribute.type.foreign:
-                string+="\tprivate "+attribute.type.java_name+"DTO "+attribute.java_name()+";\n"
+                if self.nodao:
+                    string+="\tprivate "+attribute.type.java_name+" "+attribute.java_name()+";\n"
+                else:
+                    string+="\tprivate "+attribute.type.java_name+"DTO "+attribute.java_name()+";\n"
             else:
                 string+="\tprivate "+attribute.type.java_name+" "+attribute.java_name()+";\n"
         string += "\n"
@@ -287,8 +312,8 @@ public class Db2{java_name}DAO implements {java_name}DAO {{
 	}"""
 
         for attribute in self.attributes:
-            string += attribute.get_getter()
-            string += attribute.get_setter()
+            string += attribute.get_getter(self.nodao)
+            string += attribute.get_setter(self.nodao)
             string +="\n"
         string +="}"
         return string

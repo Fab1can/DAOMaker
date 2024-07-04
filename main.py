@@ -7,6 +7,7 @@ from mapping import Mapping
 from factories import DAOfactory, DB2DAOfactory
 
 FILENAME=sys.argv[1]
+NODAO=len(sys.argv)>2
 CARATETRI_INIZIALI="[a-zàèìòùé]"
 ALTRI_CARATTERI="[a-z_0-9àèìòùé]"
 PAROLA=CARATETRI_INIZIALI+ALTRI_CARATTERI+"*"
@@ -19,14 +20,19 @@ def from_file(filename):
     _relation = ""
     mappings = {}
     clean_mappings = {}
+    plurals={}
     for line in lines:
-        res_relation = re.search("^"+PAROLA+"$", line)
+        res_relation = re.search("^("+PAROLA+")(/("+PAROLA+")){0,1}$", line)
         res_attribute = re.search("^("+PAROLA+"):("+PAROLA+")$",line)
         res_mappings = re.search("^("+PAROLA+")\*("+PAROLA+")$",line)
         res_empty = re.search("^$",line)
         if res_relation:
-            _relations[line]={}
-            _relation=line
+            _relation=res_relation.group(1)
+            if(res_relation.group(3)==None):
+                plurals[_relation]=_relation+"s"
+            else:
+                plurals[_relation]=res_relation.group(2)
+            _relations[_relation]={}
         elif res_attribute and _relation!="":
             _relations[_relation][res_attribute.group(1)]=res_attribute.group(2)
         elif res_mappings:
@@ -64,20 +70,20 @@ def from_file(filename):
             elif type_name=="date":
                 _type = Type("Date", "DATE", "Date")
             elif type_name in _relations:
-                _type = Type(snake2pascal(type_name), "INT NOT NULL REFERENCES "+type_name+"("+type_name+"_id)", "Int", False, True)
+                _type = Type(snake2pascal(type_name), "INT NOT NULL REFERENCES "+plurals[type_name]+"("+type_name+"_id)", "Int", False, True)
             else:
                 _type = Type(type_name, type_name.upper(), type_name[0].upper()+type_name[1:])
             
             attributes.append(Attribute(name, _type))
         if relation in mappings:
             for mapped in mappings[relation]:
-                attributes.append(Attribute(mapped+"s", Type(snake2pascal(mapped), None, True, True)))
+                attributes.append(Attribute(plurals[mapped], Type(snake2pascal(mapped), None, True, True)))
 
-        relations.append(Relation(relation, attributes))
+        relations.append(Relation(relation, plurals[relation], attributes, NODAO))
 
     for relation in clean_mappings:
         for mapping in clean_mappings[relation]:
-            relations.append(Mapping(relation, mapping))
+            relations.append(Mapping(relation, mapping, plurals[relation], plurals[mapping]))
 
     return relations
 
@@ -88,15 +94,23 @@ try:
 except FileNotFoundError:
     pass
 os.mkdir("out")
-for relation in relations:
-    if type(relation) is Relation:
-        with open("out\\"+relation.java_name()+"DTO.java", "w") as f:
-            f.write(relation.getDTO())
-    with open("out\\"+relation.java_name()+"DAO.java", "w") as f:
-        f.write(relation.getDAO())
-    with open("out\\Db2"+relation.java_name()+"DAO.java", "w") as f:
-        f.write(relation.getDb2DAO())
-with open("out\\DAOFactory.java", "w") as f:
-    f.write(DAOfactory(relations))
-with open("out\\Db2DAOFactory.java", "w") as f:
-    f.write(DB2DAOfactory(relations))
+if NODAO:
+    for relation in relations:
+        if type(relation) is Relation:
+            with open("out\\"+relation.java_name()+".java", "w") as f:
+                f.write(relation.getDTO())
+        with open("out\\"+relation.java_name()+".sql", "w") as f:
+            f.write(relation.getCreateDrop())
+else:
+    for relation in relations:
+        if type(relation) is Relation:
+            with open("out\\"+relation.java_name()+"DTO.java", "w") as f:
+                f.write(relation.getDTO())
+        with open("out\\"+relation.java_name()+"DAO.java", "w") as f:
+            f.write(relation.getDAO())
+        with open("out\\Db2"+relation.java_name()+"DAO.java", "w") as f:
+            f.write(relation.getDb2DAO())
+    with open("out\\DAOFactory.java", "w") as f:
+        f.write(DAOfactory(relations))
+    with open("out\\Db2DAOFactory.java", "w") as f:
+        f.write(DB2DAOfactory(relations))

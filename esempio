@@ -12,4 +12,10 @@ field
 size:float
 owner:farmer
 
+goose/geese
+name:string
+age:int
+owner:farmer
+
 cow*field
+goose*field

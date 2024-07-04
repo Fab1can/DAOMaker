@@ -38,12 +38,18 @@ class Attribute:
         else:
             return "entry.set"+self.java_signature()+"(rs.get"+self.type.prepared_name+"("+self.name.upper()+"))"
 
-    def get_getter(self):
+    def get_getter(self, nodao: bool):
         string = "\tpublic "
         if self.type.array_list:
-            string+="List<"+self.type.java_name+"DTO> "
+            if nodao:
+                string+="Set<"+self.type.java_name+"> "
+            else:
+                string+="List<"+self.type.java_name+"DTO> "
         elif self.type.foreign:
-            string+=self.type.java_name+"DTO "
+            if nodao:
+                string+=self.type.java_name+" "
+            else:
+                string+=self.type.java_name+"DTO "
         else:
             string+=self.type.java_name+" "
         if self.type.java_name=="boolean":
@@ -54,7 +60,7 @@ class Attribute:
         string += "return this."+self.java_name()+";\n\t}\n"
         return string
     
-    def get_setter(self):
+    def get_setter(self, nodao: bool):
         string = "\tpublic void "
         if self.type.java_name=="boolean":
             string+="is"+self.java_signature()
@@ -62,8 +68,11 @@ class Attribute:
             string+="set"+self.java_signature()
         string += "("
         if self.type.array_list:
-            string+="List<"+self.type.java_name+"DTO> "
-        elif self.type.foreign:
+            if nodao:
+                string+="Set<"+self.type.java_name+"> "
+            else:
+                string+="List<"+self.type.java_name+"DTO> "
+        elif self.type.foreign and not nodao:
             string+=self.type.java_name+"DTO "
         else:
             string+=self.type.java_name+" "

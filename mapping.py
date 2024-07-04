@@ -1,12 +1,14 @@
 from utils import snake2pascal
 
 class Mapping:
-    def __init__(self, relation1, relation2):
+    def __init__(self, relation1, relation2, plural_relation1, plural_relation2):
         self.relation1 = relation1
         self.relation2 = relation2
+        self.plural_relation1 = plural_relation1
+        self.plural_relation2 = plural_relation2
 
     def java_name(self):
-        return snake2pascal(self.relation1)+snake2pascal(self.relation2)+"Mapping"
+        return snake2pascal(self.plural_relation1)+snake2pascal(self.plural_relation2)+"Mapping"
     
     def getDAO(self):
         return """
@@ -34,10 +36,10 @@ public class Db2{java_name}DAO implements {java_name}DAO {{
 
 	// === Costanti letterali per non sbagliarsi a scrivere !!! ============================
 
-	public static final String TABLE = "{relation1}_{relation2}";
+	public static final String TABLE = "{plural_relation1}_{plural_relation2}";
     
-    public static final String TABLE_1 = "{relation1}";
-    public static final String TABLE_2 = "{relation2}";
+    public static final String TABLE_1 = "{plural_relation1}";
+    public static final String TABLE_2 = "{plural_relation2}";
 
 	// -------------------------------------------------------------------------------------
 
@@ -80,8 +82,8 @@ public class Db2{java_name}DAO implements {java_name}DAO {{
 			ID_1 + " INT NOT NULL, " +
 			ID_2 + " INT NOT NULL, " +
 			"PRIMARY KEY (" + ID_1 + "," + ID_2 + " ), " +
-			"FOREIGN KEY (" + ID_1 + ") REFERENCES {relation1}(id) ON DELETE CASCADE, " +
-			"FOREIGN KEY (" + ID_2 + ") REFERENCES {relation2}(id) ON DELETE CASCADE" +
+			"FOREIGN KEY (" + ID_1 + ") REFERENCES {plural_relation1}(id) ON DELETE CASCADE, " +
+			"FOREIGN KEY (" + ID_2 + ") REFERENCES {plural_relation2}(id) ON DELETE CASCADE" +
 			") ";
 	static String drop = "DROP " +
 			"TABLE " + TABLE + " ";
@@ -172,4 +174,16 @@ public class Db2{java_name}DAO implements {java_name}DAO {{
 		return result;
 	}}
 
-}}""".format(java_name=self.java_name(), relation1=self.relation1, relation2=self.relation2, id1=self.relation1+"_id", id2=self.relation2+"_id", relation1_java_name=snake2pascal(self.relation1), relation2_java_name=snake2pascal(self.relation2))
+}}""".format(java_name=self.java_name(), relation1=self.relation1, relation2=self.relation2, plural_relation1=self.plural_relation1, plural_relation2 = self.plural_relation2, id1=self.relation1+"_id", id2=self.relation2+"_id", relation1_java_name=snake2pascal(self.relation1), relation2_java_name=snake2pascal(self.relation2))
+
+    def getCreateDrop(self):
+        return """
+CREATE TABLE {plural_relation1}_{plural_relation2} ( {id1} INT NOT NULL, {id2} INT NOT NULL, PRIMARY KEY ( {id1}, {id2} ), FOREIGN KEY ( {id1} ) REFERENCES {plural_relation1}(id) ON DELETE CASCADE, FOREIGN KEY ( {id2} ) REFERENCES {plural_relation2}(id) ON DELETE CASCADE)
+            
+DROP TABLE {plural_relation1}_{plural_relation2}
+""".format(
+    plural_relation1=self.plural_relation1,
+    plural_relation2 = self.plural_relation2,
+    id1=self.relation1+"_id",
+    id2=self.relation2+"_id"
+)

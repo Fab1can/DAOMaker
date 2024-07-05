@@ -9,7 +9,7 @@ python main.py nomefile [nodao]
 
 ## Come funziona
 
-Questo script prenderà come argomento un file contenente la stuttura delle tabelle del database e creerà nella cartella `out` i file necessari all'implementazione di base del pattern DAO in Java usando DB2 come DBMS, specificando il parametro `nodao` verrano generati esclusivamente i file DTO senza riferimenti al pattern DAO e dei file SQl contenenti le istruzioni necessarie a creare ed eliminare le tabelle
+Questo script prenderà come argomento un file contenente la stuttura delle tabelle del database e creerà nella cartella `out` i file necessari all'implementazione di base del pattern DAO in Java usando DB2 come DBMS, specificando il parametro `nodao` verrano generati esclusivamente i file DTO senza riferimenti al pattern DAO e dei file SQl contenenti le istruzioni necessarie a creare ed eliminare le tabelle, specificando il parametro `repo` verrano generati i file DTO senza riferimenti al pattern DAO e i file di repository necessari alla forza bruta
 
 ## Sintassi del file
 

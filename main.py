@@ -8,6 +8,7 @@ from factories import DAOfactory, DB2DAOfactory
 
 FILENAME=sys.argv[1]
 NODAO=len(sys.argv)>2
+REPO=NODAO and sys.argv[2].lower()=="repo"
 CARATETRI_INIZIALI="[a-zàèìòùé]"
 ALTRI_CARATTERI="[a-z_0-9àèìòùé]"
 PAROLA=CARATETRI_INIZIALI+ALTRI_CARATTERI+"*"
@@ -99,8 +100,12 @@ if NODAO:
         if type(relation) is Relation:
             with open("out\\"+relation.java_name()+".java", "w") as f:
                 f.write(relation.getDTO())
-        with open("out\\"+relation.java_name()+".sql", "w") as f:
-            f.write(relation.getCreateDrop())
+        if REPO:
+            with open("out\\"+relation.java_name()+"Repository.java", "w") as f:
+                f.write(relation.getRepository())
+        if not REPO:
+            with open("out\\"+relation.java_name()+".sql", "w") as f:
+                f.write(relation.getCreateDrop())
 else:
     for relation in relations:
         if type(relation) is Relation:

@@ -42,8 +42,241 @@ public interface {java_name}DAO {{
 }}
 """.format(java_name=self.java_name(), sql_name=self.name)
 
-    def getDb2DAO(self):
+    def getRepository(self):
+        return """
+import java.sql.*;
 
+public class {java_name}Repository {{
+	private DataSource dataSource;
+
+	// === Costanti letterali per non sbagliarsi a scrivere !!! ============================
+
+	private static final String TABLE = "{sql_name_plural}";
+
+	// -------------------------------------------------------------------------------------
+
+		public static final String ID = "id";
+{static_names}
+
+	// == STATEMENT SQL ====================================================================
+
+	static final String insert = "INSERT " +
+			"INTO " + TABLE + " ( " +
+			ID {insert_names} +
+			") " +
+			"VALUES (?{insert_interrogatives}) ";
+
+	static String read_by_id = "SELECT * " +
+			"FROM " + TABLE + " " +
+			"WHERE " + ID + " = ? ";
+
+	static String delete = "DELETE " +
+			"FROM " + TABLE + " " +
+			"WHERE " + ID + " = ? ";
+
+	static String update = "UPDATE " + TABLE + " " +
+			"SET " +
+{update_names}
+			"WHERE " + ID + " = ? ";
+
+	static String query = "SELECT * " +
+			"FROM " + TABLE + " ";
+
+	// -------------------------------------------------------------------------------------
+
+	static String create = "CREATE " +
+			"TABLE " + TABLE + " ( " +
+			ID + " INT NOT NULL PRIMARY KEY" +
+{create_names}
+			") ";
+	static String drop = "DROP " +
+			"TABLE " + TABLE + " ";
+
+	// =====================================================================================
+
+	public {java_name}Repository(int databaseType) {{
+		dataSource = new DataSource(databaseType);
+	}}
+	
+	public void dropTable() throws PersistenceException {{
+		Connection conn = this.dataSource.getConnection();
+		Statement stmt = null;
+		try {{
+			stmt = conn.createStatement();
+			stmt.executeUpdate(drop);
+		}} catch (SQLException e) {{
+			// the table does not exist
+		}} finally {{
+			try {{
+				if (stmt != null) {{
+					stmt.close();
+				}}
+				if (conn != null) {{
+					conn.close();
+				}}
+			}} catch (SQLException e) {{
+				throw new PersistenceException(e.getMessage());
+			}}
+		}}
+	}}
+
+	public void createTable() throws PersistenceException {{
+		Connection connection = this.dataSource.getConnection();
+
+		Statement statement = null;
+		try {{
+			statement = connection.createStatement();
+			statement.executeUpdate(create);
+		}} catch (SQLException e) {{
+			throw new PersistenceException(e.getMessage());
+		}} finally {{
+			try {{
+				if (statement != null)
+					statement.close();
+				if (connection != null)
+					connection.close();
+			}} catch (SQLException e) {{
+				throw new PersistenceException(e.getMessage());
+			}}
+		}}
+	}}
+
+	public void persist({java_name} {sql_name}) throws PersistenceException {{
+		Connection connection = null;
+		PreparedStatement prep_stmt = null;
+
+		try {{
+			connection = this.dataSource.getConnection();
+			prep_stmt = connection.prepareStatement(insert);
+			prep_stmt.setInt(1, {sql_name}.getId());
+{insert_statement}
+			prep_stmt.executeUpdate();
+            
+            //TODO: GESTIRE ASSOCIAZIONI
+
+		}} catch (SQLException e) {{
+			throw new PersistenceException(e.getMessage());
+		}} finally {{
+			try {{
+				if (prep_stmt != null)
+					prep_stmt.close();
+				if (connection != null) {{
+					connection.close();
+					connection = null;
+				}}
+			}} catch (SQLException e) {{
+				throw new PersistenceException(e.getMessage());
+			}}
+		}}
+
+	}}
+    
+    public {java_name} read(int id) throws PersistenceException {{
+		{java_name} result = null;
+		Connection connection = null;
+        PreparedStatement prep_stmt
+		try {{
+			connection = this.dataSource.getConnection();
+			prep_stmt = connection.prepareStatement(read_by_id);
+			prep_stmt.clearParameters();
+			prep_stmt.setInt(1, id);
+			ResultSet rs = prep_stmt.executeQuery();
+			if (rs.next()) {{
+				{java_name} entry = new {java_name}();
+				entry.setId(rs.getInt(ID));
+{read_statement}
+				
+				//TODO: GESTIRE ASSOCIAZIONI
+				result = entry;
+			}}
+			rs.close();
+			prep_stmt.close();
+		}} catch (SQLException e) {{
+			throw new PersistenceException(e.getMessage());
+		}} finally {{
+			try {{
+				if (prep_stmt != null)
+					prep_stmt.close();
+				if (connection != null) {{
+					connection.close();
+					connection = null;
+				}}
+			}} catch (SQLException e) {{
+				throw new PersistenceException(e.getMessage());
+			}}
+		}}
+		return result;
+	}}
+
+	public void update({java_name} {sql_name}) throws PersistenceException {{
+		Connection connection = null;
+		PreparedStatement prep_stmt = null;
+
+		try {{
+			connection = this.dataSource.getConnection();
+			prep_stmt = connection.prepareStatement(update);
+
+			prep_stmt.clearParameters();
+			prep_stmt.setInt(1, {sql_name}.getId());
+{insert_statement}
+			prep_stmt.executeUpdate();
+		}} catch (SQLException e) {{
+			throw new PersistenceException(e.getMessage());
+		}} finally {{
+			try {{
+				if (prep_stmt != null)
+					prep_stmt.close();
+				if (connection != null) {{
+					connection.close();
+					connection = null;
+				}}
+			}} catch (SQLException e) {{
+				throw new PersistenceException(e.getMessage());
+			}}
+		}}
+	}}
+
+	public void delete(int id) throws PersistenceException {{
+		Connection connection = null;
+		PreparedStatement prep_stmt = null;
+
+		try {{
+			connection = this.dataSource.getConnection();
+			prep_stmt = connection.prepareStatement(delete);
+
+			prep_stmt.setInt(1, id);
+			prep_stmt.executeUpdate();
+		}} catch (SQLException e) {{
+			throw new PersistenceException(e.getMessage());
+		}} finally {{
+			try {{
+				if (prep_stmt != null)
+					prep_stmt.close();
+				if (connection != null) {{
+					connection.close();
+					connection = null;
+				}}
+			}} catch (SQLException e) {{
+				throw new PersistenceException(e.getMessage());
+			}}
+		}}
+	}}
+
+}}
+""".format(
+    java_name=self.java_name(),
+    sql_name=self.name, 
+    sql_name_plural=self.plural,
+    static_names = "\n".join(["\tpublic static final String "+attribute.name.upper()+" = \""+attribute.static_name()+"\";" for attribute in self.non_list_attributes()]),
+    insert_names = "+\",\"+"+"+\",\"+".join([attribute.name.upper() for attribute in self.non_list_attributes()]) if len(self.non_list_attributes())>0 else "",
+    insert_interrogatives = ","+",".join(["?" for attribute in self.non_list_attributes()]) if len(self.non_list_attributes())>0 else "",
+    update_names = "\n".join(["\t\t\t"+attribute.name.upper()+" + \" = ?, \" +" for attribute in self.non_list_attributes()]),
+    create_names = "\t\t\t\",\"+\n"+"+\n\t\t\t\",\"+\n".join(["\t\t\t\""+attribute.name.upper()+" "+attribute.type.sql_name+"\"" for attribute in self.non_list_attributes()])+"+",
+    insert_statement = "\n".join(["\t\t\tprep_stmt.set"+ self.non_list_attributes()[i].type.prepared_name+"("+str(i+2)+", "+self.non_list_attributes()[i].get_getter_method(self.name)+");" for i in range(len(self.non_list_attributes()))]),
+    read_statement = "\n".join(["\t\t\t\t"+attribute.get_setter_method()+";" for attribute in self.non_list_attributes()])
+)
+
+    def getDb2DAO(self):
         return """
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -191,7 +424,7 @@ public class Db2{java_name}DAO implements {java_name}DAO {{
 		}}
 		Connection conn = Db2DAOFactory.createConnection();
 		try {{
-			PreparedStatement prep_stmt = conn.prepareStatement(Db2{java_name}DAO.delete);
+			PreparedStatement prep_stmt = conn.prepareStatement(delete);
 			prep_stmt.clearParameters();
 			prep_stmt.setInt(1, id);
 			prep_stmt.executeUpdate();

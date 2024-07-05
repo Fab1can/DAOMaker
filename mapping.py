@@ -7,8 +7,8 @@ class Mapping:
         self.plural_relation1 = plural_relation1
         self.plural_relation2 = plural_relation2
 
-    def java_name(self):
-        return snake2pascal(self.plural_relation1)+snake2pascal(self.plural_relation2)+"Mapping"
+    def java_name(self, extra="Mapping"):
+        return snake2pascal(self.plural_relation1)+snake2pascal(self.plural_relation2)+extra
     
     def getDAO(self):
         return """
@@ -172,6 +172,166 @@ public class Db2{java_name}DAO implements {java_name}DAO {{
 			Db2DAOFactory.closeConnection(conn);
 		}}
 		return result;
+	}}
+
+}}""".format(java_name=self.java_name(), relation1=self.relation1, relation2=self.relation2, plural_relation1=self.plural_relation1, plural_relation2 = self.plural_relation2, id1=self.relation1+"_id", id2=self.relation2+"_id", relation1_java_name=snake2pascal(self.relation1), relation2_java_name=snake2pascal(self.relation2))
+    
+    def getRepo(self):
+        return """
+public class {java_name} {{
+
+	// === Costanti letterali per non sbagliarsi a scrivere !!! ============================
+
+	public static final String TABLE = "{plural_relation1}_{plural_relation2}";
+    
+    public static final String TABLE_1 = "{plural_relation1}";
+    public static final String TABLE_2 = "{plural_relation2}";
+
+	// -------------------------------------------------------------------------------------
+
+	public static final String ID_1 = "{id1}";
+	public static final String ID_2 = "{id2}";
+
+	// == STATEMENT SQL ====================================================================
+
+	static final String insert = "INSERT " +
+			"INTO " + TABLE + " ( " +
+			ID_1 + ", " + ID_2 + " " +
+			") " +
+			"VALUES (?,?) ";
+
+	static String read_by_ids = "SELECT * " +
+			"FROM " + TABLE + " " +
+			"WHERE " + ID_1 + " = ? " +
+			"AND " + ID_2 + " = ? ";
+
+	static String read_by_{id1} = "SELECT * " +
+			"FROM " + TABLE + " t , " + TABLE_2 + " t2 " +
+			"WHERE t." + ID_2 + " = t2." + {relation2_java_name}.ID + " AND t." + ID_1 +" = ?";
+
+	static String read_by_{id2} = "SELECT * " +
+			"FROM " + TABLE + " t , " + TABLE_1 + " t1 " +
+			"WHERE t." + ID_1 + " = t1." + {relation1_java_name}.ID + " AND t." + ID_2 +" = ?";
+
+	static String read_all = "SELECT * " +
+			"FROM " + TABLE + " ";
+
+	static String delete = "DELETE " +
+			"FROM " + TABLE + " " +
+			"WHERE " + ID_1 + " = ? " +
+			"AND " + ID_2 + " = ? ";
+
+	// -------------------------------------------------------------------------------------
+
+	static String create = "CREATE " +
+			"TABLE " + TABLE + " ( " +
+			ID_1 + " INT NOT NULL, " +
+			ID_2 + " INT NOT NULL, " +
+			"PRIMARY KEY (" + ID_1 + "," + ID_2 + " ), " +
+			"FOREIGN KEY (" + ID_1 + ") REFERENCES {plural_relation1}(id) ON DELETE CASCADE, " +
+			"FOREIGN KEY (" + ID_2 + ") REFERENCES {plural_relation2}(id) ON DELETE CASCADE" +
+			") ";
+	static String drop = "DROP " +
+			"TABLE " + TABLE + " ";
+
+	// === METODI CRUD =========================================================================
+
+	public void persist(int {id1}, int {id2}) throws PersistenceException {{
+		Connection connection = null;
+		PreparedStatement prep_stmt = null;
+		try {{
+			connection = this.dataSource.getConnection();
+			prep_stmt = connection.prepareStatement(insert);
+			prep_stmt.clearParameters();
+			prep_stmt.setInt(1, {id1});
+			prep_stmt.setInt(2, {id2});
+			prep_stmt.executeUpdate();
+		}} catch (SQLException e) {{
+			throw new PersistenceException(e.getMessage());
+		}} finally {{
+			try {{
+				if (prep_stmt != null)
+					prep_stmt.close();
+				if (connection != null) {{
+					connection.close();
+					connection = null;
+				}}
+			}} catch (SQLException e) {{
+				throw new PersistenceException(e.getMessage());
+			}}
+		}}
+	}}
+
+	public boolean delete(int {id1}, int {id2}) throws PersistenceException {{
+		Connection connection = null;
+		PreparedStatement prep_stmt = null;
+        
+		try {{
+			connection = this.dataSource.getConnection();
+			prep_stmt = connection.prepareStatement(delete);
+            
+			prep_stmt.clearParameters();
+			prep_stmt.setInt(1, {id1});
+			prep_stmt.setInt(2, {id2});
+			prep_stmt.executeUpdate();
+		}} catch (SQLException e) {{
+			throw new PersistenceException(e.getMessage());
+		}} finally {{
+			try {{
+				if (prep_stmt != null)
+					prep_stmt.close();
+				if (connection != null) {{
+					connection.close();
+					connection = null;
+				}}
+			}} catch (SQLException e) {{
+				throw new PersistenceException(e.getMessage());
+			}}
+		}}
+		return result;
+	}}
+
+	public void dropTable() throws PersistenceException {{
+		Connection conn = this.dataSource.getConnection();
+		Statement stmt = null;
+		try {{
+			stmt = conn.createStatement();
+			stmt.executeUpdate(drop);
+		}} catch (SQLException e) {{
+			// the table does not exist
+		}} finally {{
+			try {{
+				if (stmt != null) {{
+					stmt.close();
+				}}
+				if (conn != null) {{
+					conn.close();
+				}}
+			}} catch (SQLException e) {{
+				throw new PersistenceException(e.getMessage());
+			}}
+		}}
+	}}
+
+	public void createTable() throws PersistenceException {{
+		Connection connection = this.dataSource.getConnection();
+
+		Statement statement = null;
+		try {{
+			statement = connection.createStatement();
+			statement.executeUpdate(create);
+		}} catch (SQLException e) {{
+			throw new PersistenceException(e.getMessage());
+		}} finally {{
+			try {{
+				if (statement != null)
+					statement.close();
+				if (connection != null)
+					connection.close();
+			}} catch (SQLException e) {{
+				throw new PersistenceException(e.getMessage());
+			}}
+		}}
 	}}
 
 }}""".format(java_name=self.java_name(), relation1=self.relation1, relation2=self.relation2, plural_relation1=self.plural_relation1, plural_relation2 = self.plural_relation2, id1=self.relation1+"_id", id2=self.relation2+"_id", relation1_java_name=snake2pascal(self.relation1), relation2_java_name=snake2pascal(self.relation2))

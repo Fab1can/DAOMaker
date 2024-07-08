@@ -51,11 +51,11 @@ public class {java_name}Repository {{
 
 	// === Costanti letterali per non sbagliarsi a scrivere !!! ============================
 
-	private static final String TABLE = "{sql_name_plural}";
+	public static final String TABLE = "{sql_name_plural}";
 
 	// -------------------------------------------------------------------------------------
 
-		public static final String ID = "id";
+	public static final String ID = "id";
 {static_names}
 
 	// == STATEMENT SQL ====================================================================
@@ -174,7 +174,7 @@ public class {java_name}Repository {{
     public {java_name} read(int id) throws PersistenceException {{
 		{java_name} result = null;
 		Connection connection = null;
-        PreparedStatement prep_stmt
+        PreparedStatement prep_stmt = null;
 		try {{
 			connection = this.dataSource.getConnection();
 			prep_stmt = connection.prepareStatement(read_by_id);
@@ -271,7 +271,7 @@ public class {java_name}Repository {{
     insert_names = "+\",\"+"+"+\",\"+".join([attribute.name.upper() for attribute in self.non_list_attributes()]) if len(self.non_list_attributes())>0 else "",
     insert_interrogatives = ","+",".join(["?" for attribute in self.non_list_attributes()]) if len(self.non_list_attributes())>0 else "",
     update_names = "\n".join(["\t\t\t"+attribute.name.upper()+" + \" = ?, \" +" for attribute in self.non_list_attributes()]),
-    create_names = "\t\t\t\",\"+\n"+"+\n\t\t\t\",\"+\n".join(["\t\t\t\""+attribute.name.upper()+" "+attribute.type.sql_name+"\"" for attribute in self.non_list_attributes()])+"+",
+    create_names = "\t\t\t\",\"+\n"+"+\n\t\t\t\",\"+\n".join(["\t\t\t"+attribute.name.upper()+"+\" "+attribute.type.sql_name+"\"" for attribute in self.non_list_attributes()])+"+",
     insert_statement = "\n".join(["\t\t\tprep_stmt.set"+ self.non_list_attributes()[i].type.prepared_name+"("+str(i+2)+", "+self.non_list_attributes()[i].get_getter_method(self.name)+");" for i in range(len(self.non_list_attributes()))]),
     read_statement = "\n".join(["\t\t\t\t"+attribute.get_setter_method()+";" for attribute in self.non_list_attributes()])
 )
@@ -287,7 +287,7 @@ public class Db2{java_name}DAO implements {java_name}DAO {{
 
 	// === Costanti letterali per non sbagliarsi a scrivere !!! ============================
 
-	static final String TABLE = "{sql_name_plural}";
+	public static final String TABLE = "{sql_name_plural}";
 
 	// -------------------------------------------------------------------------------------
 
@@ -483,7 +483,7 @@ public class Db2{java_name}DAO implements {java_name}DAO {{
     insert_names = "+\",\"+"+"+\",\"+".join([attribute.name.upper() for attribute in self.non_list_attributes()]) if len(self.non_list_attributes())>0 else "",
     insert_interrogatives = ","+",".join(["?" for attribute in self.non_list_attributes()]) if len(self.non_list_attributes())>0 else "",
     update_names = "\n".join(["\t\t\t"+attribute.name.upper()+" + \" = ?, \" +" for attribute in self.non_list_attributes()]),
-    create_names = "\t\t\t\",\"+\n"+"+\n\t\t\t\",\"+\n".join(["\t\t\t\""+attribute.name.upper()+" "+attribute.type.sql_name+"\"" for attribute in self.non_list_attributes()])+"+",
+    create_names = "\t\t\t\",\"+\n"+"+\n\t\t\t\",\"+\n".join(["\t\t\t"+attribute.name.upper()+"+\" "+attribute.type.sql_name+"\"" for attribute in self.non_list_attributes()])+"+",
     insert_statement = "\n".join(["\t\t\tprep_stmt.set"+ self.non_list_attributes()[i].type.prepared_name+"("+str(i+2)+", "+self.non_list_attributes()[i].get_getter_method(self.name)+");" for i in range(len(self.non_list_attributes()))]),
     read_statement = "\n".join(["\t\t\t\t"+attribute.get_setter_method()+";" for attribute in self.non_list_attributes()])
 )

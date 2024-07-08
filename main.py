@@ -32,7 +32,7 @@ def from_file(filename):
             if(res_relation.group(3)==None):
                 plurals[_relation]=_relation+"s"
             else:
-                plurals[_relation]=res_relation.group(2)
+                plurals[_relation]=res_relation.group(3)
             _relations[_relation]={}
         elif res_attribute and _relation!="":
             _relations[_relation][res_attribute.group(1)]=res_attribute.group(2)
@@ -71,7 +71,7 @@ def from_file(filename):
             elif type_name=="date":
                 _type = Type("Date", "DATE", "Date")
             elif type_name in _relations:
-                _type = Type(snake2pascal(type_name), "INT NOT NULL REFERENCES "+plurals[type_name]+"("+type_name+"_id)", "Int", False, True)
+                _type = Type(snake2pascal(type_name), "INT NOT NULL REFERENCES "+plurals[type_name]+"(id)", "Int", False, True)
             else:
                 _type = Type(type_name, type_name.upper(), type_name[0].upper()+type_name[1:])
             

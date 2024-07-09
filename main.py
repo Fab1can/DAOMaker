@@ -14,7 +14,7 @@ ALTRI_CARATTERI="[a-z_0-9àèìòùé]"
 PAROLA=CARATETRI_INIZIALI+ALTRI_CARATTERI+"*"
 
 def from_file(filename):
-    f = open(filename,"r")
+    f = open(filename,"r", encoding="utf-8")
     txt = f.read()
     lines = txt.split("\n")
     _relations = {}

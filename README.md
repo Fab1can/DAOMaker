@@ -17,3 +17,7 @@ La documentazione completa del progetto è disponibile nella cartella [`docs/`](
 - [Sintassi del file di input](docs/sintassi.md) — Come scrivere il file di definizione delle tabelle
 - [Esempi](docs/esempi.md) — Esempi completi di input e output
 - [Documentazione dei moduli](docs/indice.md) — Riferimento API per ogni modulo Python
+
+## Licenza
+
+Questo progetto è distribuito sotto la licenza [CC BY-NC-SA 4.0](LICENSE).
